@@ -12,6 +12,8 @@ libraryDependencies ++= Seq(
 
 libraryDependencies += ("org.scalatest" %% "scalatest" % "3.2.9" % "test" withSources())
 
+// mainClass in (Compile,run) := Some("LinearRegressionModel")
+
 val javaOptsSeq = Seq(
   "--add-opens=java.base/java.io=ALL-UNNAMED",
   "--add-opens=java.base/java.nio=ALL-UNNAMED",
