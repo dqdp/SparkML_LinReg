@@ -3,8 +3,8 @@ package org.apache.spark.ml.made
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import com.google.common.io.Files
 import org.apache.spark.ml.{Pipeline, PipelineModel}
-import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.sql.DataFrame
 import org.scalatest.Assertion
 import org.scalatest.flatspec._
