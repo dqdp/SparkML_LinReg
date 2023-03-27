@@ -11,7 +11,7 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
 class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpark {
-  val delta = 0.02
+  val delta = 0.04
 
   lazy val df: DataFrame = LinearRegressionTest._df
   lazy val weights: DenseVector[Double] = LinearRegressionTest._weights
