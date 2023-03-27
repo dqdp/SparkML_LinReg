@@ -94,7 +94,7 @@ object LinearRegressionTest extends WithSpark {
   import sqlc.implicits._
 
   lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](100000, 3)
-  lazy val _weights: DenseVector[Double] = DenseVector(1.5, 0.3, -0.7)
+  lazy val _weights: DenseVector[Double] = DenseVector(1.7, 0.6, -0.5)
   lazy val _bias: Double = 1.0
   lazy val _y: DenseVector[Double] = _X * _weights + _bias + DenseVector.rand(100000) * 0.0001
 

@@ -136,8 +136,11 @@ class LinearRegressionModel private[made](override val uid: String,
 }
 
 object LinearRegressionModel extends MLReadable[LinearRegressionModel] {
+
   override def read: MLReader[LinearRegressionModel] = new MLReader[LinearRegressionModel] {
+
     override def load(path: String): LinearRegressionModel = {
+      
       val metadata = DefaultParamsReader.loadMetadata(path, sc)
       val vectors = sqlContext.read.parquet(path + "/weights")
       implicit val encoder: Encoder[Vector] = ExpressionEncoder()
