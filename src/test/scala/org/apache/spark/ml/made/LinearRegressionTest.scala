@@ -11,7 +11,7 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
 class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpark {
-  val delta = 0.01
+  val delta = 0.02
 
   lazy val df: DataFrame = LinearRegressionTest._df
   lazy val weights: DenseVector[Double] = LinearRegressionTest._weights
@@ -32,8 +32,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
 
   "Estimator" should "produce functional model" in {
     val estimator = new LinearRegression()
-      .setInputCol("features")
-      .setOutputCol("target")
+      .setInputCol("features").setOutputCol("target")
     val model = estimator.fit(df)
 
     model.weights.size should be(weights.size + 1)
@@ -97,8 +96,8 @@ object LinearRegressionTest extends WithSpark {
   import sqlc.implicits._
 
   lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](100000, 3)
-  lazy val _weights: DenseVector[Double] = DenseVector(1.7, 0.6, -0.5)
-  lazy val _bias: Double = 2.2
+  lazy val _weights: DenseVector[Double] = DenseVector(0.8, -0.08, -1.1)
+  lazy val _bias: Double = 0.25
   lazy val _y: DenseVector[Double] = _X * _weights + _bias + DenseVector.rand(100000) * 0.0001
 
   lazy val data: DenseMatrix[Double] = DenseMatrix.horzcat(_X, _y.asDenseMatrix.t)

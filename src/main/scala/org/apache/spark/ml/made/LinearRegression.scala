@@ -35,20 +35,21 @@ trait LinearRegressionParams extends HasInputCol with HasOutputCol {
 
   def getMaxIterations: Int = $(maxIterations)
 
-  setDefault(maxIterations -> 10000)
-  setDefault(learningRate -> 0.05)
+  setDefault(maxIterations -> 1200)
+  setDefault(learningRate -> 0.04)
 
   protected def validateAndTransformSchema(schema: StructType): StructType = {
     SchemaUtils.checkColumnType(schema, getInputCol, new VectorUDT())
+    schema
 
-    if (schema.fieldNames.contains($(outputCol))) {
-
-      SchemaUtils.checkColumnType(schema, getOutputCol, new VectorUDT())
-      schema
-    } else {
-      
-      SchemaUtils.appendColumn(schema, schema(getInputCol).copy(name = getOutputCol))
-    }
+    //if (schema.fieldNames.contains($(inputCol))) {
+//
+    //  SchemaUtils.checkColumnType(schema, getInputCol, new VectorUDT())
+    //  schema
+    //}else {
+    //  schema
+    //  //SchemaUtils.appendColumn(schema, schema(getOutputCol).copy(name = getInputCol))
+    //}
   }
 }
 
@@ -60,12 +61,12 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
     implicit val encoder: Encoder[Vector] = ExpressionEncoder()
 
     val vect_assembler: VectorAssembler = new VectorAssembler()
-      .setInputCols(Array($(inputCol), "features", $(outputCol)))
-      .setOutputCol("target")
+      .setInputCols(Array($(inputCol), "ones", $(outputCol)))
+      .setOutputCol("features_target")
 
     val vectors: Dataset[Vector] = vect_assembler
-      .transform(dataset.withColumn("features", lit(1)))
-      .select("target")
+      .transform(dataset.withColumn("ones", lit(1)))
+      .select("features_target")
       .as[Vector]
 
     val dim: Int = AttributeGroup.fromStructField(dataset.schema($(inputCol))).numAttributes.getOrElse(
@@ -108,8 +109,7 @@ object LinearRegression extends DefaultParamsReadable[LinearRegression]
 class LinearRegressionModel private[made](override val uid: String,
                                           val weights: Vector) extends Model[LinearRegressionModel] with LinearRegressionParams with MLWritable {
 
-  private[made] def this(weights: Vector) =
-    this(Identifiable.randomUID("linearRegressionModel"), weights)
+  private[made] def this(weights: Vector) = this(Identifiable.randomUID("linearRegressionModel"), weights)
 
   override def copy(extra: ParamMap): LinearRegressionModel = copyValues(new LinearRegressionModel(weights), extra)
 
@@ -127,7 +127,7 @@ class LinearRegressionModel private[made](override val uid: String,
 
     val transformUdf = {
       dataset.sqlContext.udf.register(uid + "_transform",
-        (x: Vector) => bias + x.asBreeze.dot(weightsBreeze)
+        (x: Vector) => bias + x.asBreeze.toDenseVector.dot(weightsBreeze.toDenseVector)
       )
     }
 
