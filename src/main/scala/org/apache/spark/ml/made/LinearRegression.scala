@@ -59,13 +59,13 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
   override def fit(dataset: Dataset[_]): LinearRegressionModel = {
     implicit val encoder: Encoder[Vector] = ExpressionEncoder()
 
-    val vassembler: VectorAssembler = new VectorAssembler()
-      .setInputCols(Array($(inputCol), "ones", $(outputCol)))
-      .setOutputCol("features_target")
+    val vect_assembler: VectorAssembler = new VectorAssembler()
+      .setInputCols(Array($(inputCol), "features", $(outputCol)))
+      .setOutputCol("target")
 
-    val vectors: Dataset[Vector] = vassembler
-      .transform(dataset.withColumn("ones", lit(1)))
-      .select("features_target")
+    val vectors: Dataset[Vector] = vect_assembler
+      .transform(dataset.withColumn("features", lit(1)))
+      .select("target")
       .as[Vector]
 
     val dim: Int = AttributeGroup.fromStructField(dataset.schema($(inputCol))).numAttributes.getOrElse(
@@ -77,15 +77,15 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
     for (_ <- 0 until getMaxIterations) {
       val summary = vectors.rdd.mapPartitions((data: Iterator[Vector]) => {
         val summarizer = new MultivariateOnlineSummarizer()
-        data.foreach(v => {
+        data.foreach( v => {
 
           val X = v.asBreeze(0 until weights.size).toDenseVector
 
-          val y = v.asBreeze(weights.size)
+          val target = v.asBreeze(weights.size)
 
-          val grad = X * (l.sum(X * weights) - y)
+          val gradient = X * (l.sum(X * weights) - target)
 
-          summarizer.add(mllib.linalg.Vectors.fromBreeze(grad))
+          summarizer.add(mllib.linalg.Vectors.fromBreeze(gradient))
           
         })
         Iterator(summarizer)
@@ -115,6 +115,7 @@ class LinearRegressionModel private[made](override val uid: String,
 
   override def write: MLWriter = new DefaultParamsWriter(this) {
     override protected def saveImpl(path: String): Unit = {
+
       super.saveImpl(path)
       sqlContext.createDataFrame(Seq(Tuple1(weights))).write.parquet(path + "/weights")
     }
@@ -139,7 +140,6 @@ class LinearRegressionModel private[made](override val uid: String,
 object LinearRegressionModel extends MLReadable[LinearRegressionModel] {
 
   override def read: MLReader[LinearRegressionModel] = new MLReader[LinearRegressionModel] {
-
     override def load(path: String): LinearRegressionModel = {
       
       val metadata = DefaultParamsReader.loadMetadata(path, sc)

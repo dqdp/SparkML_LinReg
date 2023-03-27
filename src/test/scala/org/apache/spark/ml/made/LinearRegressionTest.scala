@@ -24,13 +24,16 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
       weights = Vectors.fromBreeze(
         DenseVector.vertcat(weights, DenseVector[Double](bias))
       )
-    ).setInputCol("features").setOutputCol("label")
+    ).setInputCol("features")
+     .setOutputCol("target")
 
     validateModel(model, model.transform(df))
   }
 
   "Estimator" should "produce functional model" in {
-    val estimator = new LinearRegression().setInputCol("features").setOutputCol("label")
+    val estimator = new LinearRegression()
+      .setInputCol("features")
+      .setOutputCol("target")
     val model = estimator.fit(df)
 
     model.weights.size should be(weights.size + 1)
@@ -46,7 +49,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
     val pipeline = new Pipeline().setStages(Array(
       new LinearRegression()
         .setInputCol("features")
-        .setOutputCol("label")
+        .setOutputCol("target")
     ))
 
     val tempDir = Files.createTempDir()
@@ -69,7 +72,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
     val pipeline = new Pipeline().setStages(Array(
       new LinearRegression()
         .setInputCol("features")
-        .setOutputCol("label")
+        .setOutputCol("target")
     ))
     val model = pipeline.fit(df)
     val tempDir = Files.createTempDir()
@@ -95,7 +98,7 @@ object LinearRegressionTest extends WithSpark {
 
   lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](100000, 3)
   lazy val _weights: DenseVector[Double] = DenseVector(1.7, 0.6, -0.5)
-  lazy val _bias: Double = 1.0
+  lazy val _bias: Double = 2.2
   lazy val _y: DenseVector[Double] = _X * _weights + _bias + DenseVector.rand(100000) * 0.0001
 
   lazy val data: DenseMatrix[Double] = DenseMatrix.horzcat(_X, _y.asDenseMatrix.t)
@@ -103,13 +106,13 @@ object LinearRegressionTest extends WithSpark {
   lazy val df: DataFrame = data(*, ::).iterator
     .map(x => (x(0), x(1), x(2), x(3)))
     .toSeq
-    .toDF("x1", "x2", "x3", "label")
+    .toDF("x0", "x1", "x2", "target")
 
-  lazy val assembler: VectorAssembler = new VectorAssembler()
-    .setInputCols(Array("x1", "x2", "x3"))
+  lazy val vector_assembler: VectorAssembler = new VectorAssembler()
+    .setInputCols(Array("x0", "x1", "x2"))
     .setOutputCol("features")
 
-  lazy val _df: DataFrame = assembler
+  lazy val _df: DataFrame = vector_assembler
     .transform(df)
-    .select("features", "label")
+    .select("features", "target")
 }
