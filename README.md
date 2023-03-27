@@ -1,2 +1,2 @@
-# SparkML_LinReg
-Linear Regression on Spark ML
+# SparkML LinReg
+Linear Regression on SparkML

@@ -36,7 +36,7 @@ trait LinearRegressionParams extends HasInputCol with HasOutputCol {
   def getMaxIterations: Int = $(maxIterations)
 
   setDefault(maxIterations -> 10000)
-  setDefault(learningRate -> 0.02)
+  setDefault(learningRate -> 0.05)
 
   protected def validateAndTransformSchema(schema: StructType): StructType = {
     SchemaUtils.checkColumnType(schema, getInputCol, new VectorUDT())
