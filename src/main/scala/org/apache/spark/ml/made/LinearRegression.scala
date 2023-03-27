@@ -2,9 +2,9 @@ package org.apache.spark.ml.made
 
 import breeze.stats.distributions.Gaussian
 import breeze.{linalg => l}
+import org.apache.spark.ml.linalg.{Vector, VectorUDT, Vectors}
 import org.apache.spark.ml.attribute.AttributeGroup
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.linalg.{Vector, VectorUDT, Vectors}
 import org.apache.spark.ml.param.shared.{HasInputCol, HasOutputCol}
 import org.apache.spark.ml.param.{DoubleParam, IntParam, ParamMap}
 import org.apache.spark.ml.util._
@@ -24,8 +24,7 @@ trait LinearRegressionParams extends HasInputCol with HasOutputCol {
   def setOutputCol(value: String): this.type = set(outputCol, value)
 
   private val maxIterations = new IntParam(this, "maxIterations", "Maximum number of iterations")
-  private val learningRate = new DoubleParam(
-    this, "learningRate", "Learning Rate")
+  private val learningRate = new DoubleParam(this, "learningRate", "Learning Rate")
 
 
   def setLearningRate(value: Double): this.type = set(learningRate, value)
@@ -43,9 +42,11 @@ trait LinearRegressionParams extends HasInputCol with HasOutputCol {
     SchemaUtils.checkColumnType(schema, getInputCol, new VectorUDT())
 
     if (schema.fieldNames.contains($(outputCol))) {
+
       SchemaUtils.checkColumnType(schema, getOutputCol, new VectorUDT())
       schema
     } else {
+      
       SchemaUtils.appendColumn(schema, schema(getInputCol).copy(name = getOutputCol))
     }
   }
@@ -58,11 +59,11 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
   override def fit(dataset: Dataset[_]): LinearRegressionModel = {
     implicit val encoder: Encoder[Vector] = ExpressionEncoder()
 
-    val assembler: VectorAssembler = new VectorAssembler()
+    val vassembler: VectorAssembler = new VectorAssembler()
       .setInputCols(Array($(inputCol), "ones", $(outputCol)))
       .setOutputCol("features_target")
 
-    val vectors: Dataset[Vector] = assembler
+    val vectors: Dataset[Vector] = vassembler
       .transform(dataset.withColumn("ones", lit(1)))
       .select("features_target")
       .as[Vector]
