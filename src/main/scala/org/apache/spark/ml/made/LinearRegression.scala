@@ -35,7 +35,7 @@ trait LinearRegressionParams extends HasInputCol with HasOutputCol {
 
   def getMaxIterations: Int = $(maxIterations)
 
-  setDefault(maxIterations -> 2000)
+  setDefault(maxIterations -> 600)
   setDefault(learningRate -> 0.5)
 
   protected def validateAndTransformSchema(schema: StructType): StructType = {
