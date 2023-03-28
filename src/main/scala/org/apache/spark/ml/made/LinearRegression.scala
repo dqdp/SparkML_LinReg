@@ -35,21 +35,12 @@ trait LinearRegressionParams extends HasInputCol with HasOutputCol {
 
   def getMaxIterations: Int = $(maxIterations)
 
-  setDefault(maxIterations -> 1500)
-  setDefault(learningRate -> 0.05)
+  setDefault(maxIterations -> 2000)
+  setDefault(learningRate -> 0.5)
 
   protected def validateAndTransformSchema(schema: StructType): StructType = {
     SchemaUtils.checkColumnType(schema, getInputCol, new VectorUDT())
     schema
-
-    //if (schema.fieldNames.contains($(inputCol))) {
-//
-    //  SchemaUtils.checkColumnType(schema, getInputCol, new VectorUDT())
-    //  schema
-    //}else {
-    //  schema
-    //  //SchemaUtils.appendColumn(schema, schema(getOutputCol).copy(name = getInputCol))
-    //}
   }
 }
 
@@ -61,12 +52,12 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
     implicit val encoder: Encoder[Vector] = ExpressionEncoder()
 
     val vect_assembler: VectorAssembler = new VectorAssembler()
-      .setInputCols(Array($(inputCol), "ones", $(outputCol)))
-      .setOutputCol("features_target")
+      .setInputCols(Array($(inputCol), "features_", $(outputCol)))
+      .setOutputCol("features_vector")
 
     val vectors: Dataset[Vector] = vect_assembler
-      .transform(dataset.withColumn("ones", lit(1)))
-      .select("features_target")
+      .transform(dataset.withColumn("features_", lit(1)))
+      .select("features_vector")
       .as[Vector]
 
     val dim: Int = AttributeGroup.fromStructField(dataset.schema($(inputCol))).numAttributes.getOrElse(

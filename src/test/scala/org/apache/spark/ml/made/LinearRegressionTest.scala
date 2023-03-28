@@ -11,7 +11,7 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
 class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpark {
-  val delta = 0.04
+  val delta = 0.001
 
   lazy val df: DataFrame = LinearRegressionTest._df
   lazy val weights: DenseVector[Double] = LinearRegressionTest._weights
@@ -35,11 +35,11 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
       .setInputCol("features").setOutputCol("target")
     val model = estimator.fit(df)
 
-    model.weights.size should be(weights.size + 1)
-    model.weights(0) should be(weights(0) +- delta)
-    model.weights(1) should be(weights(1) +- delta)
-    model.weights(2) should be(weights(2) +- delta)
-    model.weights(3) should be(bias +- delta)
+    var idx = 0;
+    for( idx <- 0 to model.weights.size - 2){
+         model.weights(idx) should be(weights(idx) +- delta);
+      }
+    model.weights(model.weights.size - 1) should be(bias +- delta);
 
     validateModel(model, model.transform(df))
   }
@@ -60,11 +60,11 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
       .stages(0)
       .asInstanceOf[LinearRegressionModel]
 
-    model.weights should be(weights.size + 1)
-    model.weights(0) should be(weights(0) +- delta)
-    model.weights(1) should be(weights(0) +- delta)
-    model.weights(2) should be(weights(0) +- delta)
-    model.weights(3) should be(bias +- delta)
+    var idx = 0;
+    for( idx <- 0 to model.weights.size - 2){
+         model.weights(idx) should be(weights(idx) +- delta);
+      }
+    model.weights(model.weights.size - 1) should be(bias +- delta);
   }
 
   "Model" should "work after re-read" in {
@@ -85,7 +85,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
   private def validateModel(model: LinearRegressionModel, df: DataFrame): Unit = {
     val vectors: Array[Double] = df.collect().map(_.getAs[Double](1))
 
-    vectors.length should be(100000)
+    vectors.length should be(10000)
     for (i <- vectors.indices)
       vectors(i) should be(y(i) +- delta)
   }
@@ -95,20 +95,20 @@ object LinearRegressionTest extends WithSpark {
 
   import sqlc.implicits._
 
-  lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](100000, 3)
-  lazy val _weights: DenseVector[Double] = DenseVector(0.8, -0.08, -1.1)
-  lazy val _bias: Double = 0.25
-  lazy val _y: DenseVector[Double] = _X * _weights + _bias + DenseVector.rand(100000) * 0.0001
+  lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](10000, 5)
+  lazy val _weights: DenseVector[Double] = DenseVector(0.6, 1.2, -1.3, 0.4, -1.9)
+  lazy val _bias: Double = 1.9
+  lazy val _y: DenseVector[Double] = _X * _weights + _bias
 
   lazy val data: DenseMatrix[Double] = DenseMatrix.horzcat(_X, _y.asDenseMatrix.t)
 
   lazy val df: DataFrame = data(*, ::).iterator
-    .map(x => (x(0), x(1), x(2), x(3)))
+    .map(x => (x(0), x(1), x(2), x(3), x(4), x(5)))
     .toSeq
-    .toDF("x0", "x1", "x2", "target")
+    .toDF("x0", "x1", "x2", "x3", "x4", "target")
 
   lazy val vector_assembler: VectorAssembler = new VectorAssembler()
-    .setInputCols(Array("x0", "x1", "x2"))
+    .setInputCols(Array("x0", "x1", "x2", "x3", "x4"))
     .setOutputCol("features")
 
   lazy val _df: DataFrame = vector_assembler
