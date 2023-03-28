@@ -100,9 +100,9 @@ object LinearRegressionTest extends WithSpark {
   lazy val _bias: Double = 1.2
   lazy val _y: DenseVector[Double] = _X * _weights + _bias
 
-  lazy val data: DenseMatrix[Double] = DenseMatrix.horzcat(_X, _y.asDenseMatrix.t)
+  lazy val mat: DenseMatrix[Double] = DenseMatrix.horzcat(_X, _y.asDenseMatrix.t)
 
-  lazy val df: DataFrame = data(*, ::).iterator
+  lazy val df: DataFrame = mat(*, ::).iterator
     .map(x => (x(0), x(1), x(2), x(3), x(4), x(5)))
     .toSeq
     .toDF("x0", "x1", "x2", "x3", "x4", "target")
